@@ -82,7 +82,6 @@ jobs:
             echo '=== Applying Kubernetes manifests ==='
             kubectl apply -f \${DEPLOY_DIR}/k8s/deployment.yaml
             kubectl apply -f \${DEPLOY_DIR}/k8s/service.yaml
-            kubectl apply -f \${DEPLOY_DIR}/k8s/ingress.yaml
 
             echo '=== Waiting for rollout to complete ==='
             kubectl rollout status deployment/ecommerce-app -n learnhub --timeout=120s
