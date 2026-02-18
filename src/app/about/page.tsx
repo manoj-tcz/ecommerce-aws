@@ -8,7 +8,7 @@ const team = [
     image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&q=80",
   },
   {
-    name: "Michael Chen",
+    name: "Manoj Yadav",
     role: "Head of Design",
     image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&q=80",
   },
