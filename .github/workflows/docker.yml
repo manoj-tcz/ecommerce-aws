@@ -11,8 +11,8 @@ env:
   ECR_REPOSITORY: learnhub/ecommerce
   ECS_SERVICE: learnhub-ecommerce-service
   ECS_CLUSTER: learnhub-cluster
-  ECS_TASK_DEFINITION: task-definition.json
-  CONTAINER_NAME: ecommerce
+  ECS_TASK_DEFINITION: learnhub-ecommerce-task
+  CONTAINER_NAME: ecommerce-container
 
 jobs:
   # ---- Job 1: Build & Push Docker Image to ECR ----
