@@ -25,8 +25,8 @@ export default function HomePage() {
                 New Collection 2026
               </span>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-                Discover Your
-                <span className="text-yellow-300"> Perfect Style</span>
+                Manoj Yadav
+                <span className="text-yellow-300"> DEmo Update Code</span>
               </h1>
               <p className="text-lg text-blue-100 mb-8 max-w-lg leading-relaxed">
                 Explore our curated collection of premium products. From tech gadgets
