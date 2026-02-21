@@ -10,11 +10,6 @@ spec:
   selector:
     matchLabels:
       app: ecommerce
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 0
   template:
     metadata:
       labels:
@@ -22,15 +17,12 @@ spec:
     spec:
       containers:
         - name: ecommerce
-          image: DOCKER_USERNAME/ecommerce:latest
+          image: IMAGE_PLACEHOLDER
           ports:
             - containerPort: 3000
-              protocol: TCP
           env:
             - name: NODE_ENV
               value: "production"
-            - name: PORT
-              value: "3000"
             - name: HOSTNAME
               value: "0.0.0.0"
           resources:
@@ -40,18 +32,15 @@ spec:
             limits:
               cpu: "500m"
               memory: "512Mi"
+          readinessProbe:
+            httpGet:
+              path: /ecommerce
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 5
           livenessProbe:
             httpGet:
               path: /ecommerce
               port: 3000
             initialDelaySeconds: 15
-            periodSeconds: 20
-            timeoutSeconds: 5
-          readinessProbe:
-            httpGet:
-              path: /ecommerce
-              port: 3000
-            initialDelaySeconds: 5
             periodSeconds: 10
-            timeoutSeconds: 5
-      restartPolicy: Always

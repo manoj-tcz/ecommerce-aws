@@ -3,8 +3,6 @@ kind: Service
 metadata:
   name: ecommerce-service
   namespace: learnhub
-  labels:
-    app: ecommerce
 spec:
   type: ClusterIP
   selector:
