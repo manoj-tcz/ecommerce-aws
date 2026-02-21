@@ -6,13 +6,21 @@ on:
       - main
   workflow_dispatch:
 
+env:
+  AWS_REGION: ap-south-1
+  ECR_REPOSITORY: learnhub/ecommerce
+  ECS_SERVICE: learnhub-ecommerce-service
+  ECS_CLUSTER: learnhub-cluster
+  ECS_TASK_DEFINITION: task-definition.json
+  CONTAINER_NAME: ecommerce
+
 jobs:
   # ---- Job 1: Build & Push Docker Image to ECR ----
   build-and-push:
     name: Build & Push to ECR
     runs-on: ubuntu-latest
     outputs:
-      image: ${{ steps.output-image.outputs.image }}
+      version: ${{ steps.version.outputs.version }}
 
     steps:
       - name: Checkout code
@@ -23,7 +31,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -32,10 +40,7 @@ jobs:
       - name: Generate version tag
         id: version
         run: |
-          ECR_REGISTRY="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com"
-          ECR_REPO="${{ secrets.ECR_REPOSITORY }}"
-
-          LATEST_TAG=$(aws ecr describe-images --repository-name "$ECR_REPO" --query "sort_by(imageDetails,&imagePushedAt)[-1].imageTags[?starts_with(@,'v')]|[0]" --output text 2>/dev/null || echo "None")
+          LATEST_TAG=$(aws ecr describe-images --repository-name "${{ env.ECR_REPOSITORY }}" --query "sort_by(imageDetails,&imagePushedAt)[-1].imageTags[?starts_with(@,'v')]|[0]" --output text 2>/dev/null || echo "None")
 
           if [ "$LATEST_TAG" = "None" ] || [ -z "$LATEST_TAG" ]; then
             NEXT_VERSION="v1"
@@ -45,29 +50,20 @@ jobs:
           fi
 
           echo "version=$NEXT_VERSION" >> $GITHUB_OUTPUT
-          echo "registry=$ECR_REGISTRY" >> $GITHUB_OUTPUT
           echo "Next version: $NEXT_VERSION"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Build and Push Docker image
-        id: build-image
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
           tags: |
-            ${{ steps.version.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:${{ steps.version.outputs.version }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ steps.version.outputs.version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      - name: Output image URI
-        id: output-image
-        run: |
-          IMAGE="${{ steps.version.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:${{ steps.version.outputs.version }}"
-          echo "image=$IMAGE" >> $GITHUB_OUTPUT
-          echo "Pushed: $IMAGE"
 
   # ---- Job 2: Deploy to ECS ----
   deploy:
@@ -81,12 +77,16 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
       - name: Download current task definition
         run: |
           aws ecs describe-task-definition \
-            --task-definition ${{ secrets.ECS_TASK_DEFINITION }} \
+            --task-definition ${{ env.ECS_TASK_DEFINITION }} \
             --query taskDefinition \
             > task-definition.json
 
@@ -95,13 +95,13 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: task-definition.json
-          container-name: ecommerce
-          image: ${{ needs.build-and-push.outputs.image }}
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ needs.build-and-push.outputs.version }}
 
       - name: Deploy to Amazon ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{ secrets.ECS_SERVICE }}
-          cluster: ${{ secrets.ECS_CLUSTER }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
