@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -8,206 +7,142 @@ import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { useToast } from "@/context/ToastContext";
 
-interface QuickViewModalProps {
+interface Props {
   product: Product;
   onClose: () => void;
 }
 
-export default function QuickViewModal({ product, onClose }: QuickViewModalProps) {
+export default function QuickViewModal({ product, onClose }: Props) {
+  const [qty, setQty] = useState(1);
+  const [imgError, setImgError] = useState(false);
   const { addToCart } = useCart();
-  const { toggleWishlist, isInWishlist } = useWishlist();
+  const { isInWishlist, toggleWishlist } = useWishlist();
   const { addToast } = useToast();
-  const [quantity, setQuantity] = useState(1);
-  const inWishlist = isInWishlist(product.id);
 
   const discount = product.originalPrice
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : 0;
 
-  const handleAddToCart = () => {
-    if (product.inStock) {
-      addToCart(product, quantity);
-      addToast(`${product.name} added to cart!`, "success");
-    }
-  };
-
-  const handleToggleWishlist = () => {
-    toggleWishlist(product);
-    addToast(
-      inWishlist ? `Removed from wishlist` : `Added to wishlist!`,
-      inWishlist ? "info" : "success"
-    );
+  const handleAdd = () => {
+    for (let i = 0; i < qty; i++) addToCart(product);
+    addToast(`${product.name} added to cart`, "success");
+    onClose();
   };
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center p-4">
-      {/* Backdrop */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in" onClick={onClose}>
+      <div className="absolute inset-0 bg-foreground/40 backdrop-blur-sm" />
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade-in"
-        onClick={onClose}
-      />
-
-      {/* Modal */}
-      <div className="relative bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-scale-in">
-        {/* Close button */}
+        className="relative bg-card rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-scale-in"
+        onClick={(e) => e.stopPropagation()}
+      >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 p-2 bg-white/80 backdrop-blur-sm rounded-full hover:bg-gray-100 transition-colors shadow-sm"
+          className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-surface hover:bg-border flex items-center justify-center transition-colors"
         >
-          <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
 
-        <div className="grid md:grid-cols-2 gap-0">
+        <div className="grid grid-cols-1 sm:grid-cols-2">
           {/* Image */}
-          <div className="relative aspect-square bg-gray-50">
-            <Image
-              src={product.image}
-              alt={product.name}
-              fill
-              className="object-cover rounded-l-3xl"
-              sizes="(max-width: 768px) 100vw, 50vw"
-            />
+          <div className="relative aspect-square bg-surface">
+            {!imgError ? (
+              <Image
+                src={product.image}
+                alt={product.name}
+                fill
+                className="object-cover rounded-t-2xl sm:rounded-l-2xl sm:rounded-tr-none"
+                onError={() => setImgError(true)}
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-muted">
+                <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5a1.5 1.5 0 001.5-1.5V4.5a1.5 1.5 0 00-1.5-1.5H3.75a1.5 1.5 0 00-1.5 1.5v15a1.5 1.5 0 001.5 1.5z" />
+                </svg>
+              </div>
+            )}
             {product.badge && (
-              <span
-                className={`absolute top-4 left-4 px-3 py-1.5 text-xs font-semibold rounded-full ${
-                  product.badge === "Sale"
-                    ? "bg-red-500 text-white"
-                    : product.badge === "New"
-                    ? "bg-green-500 text-white"
-                    : product.badge === "Sold Out"
-                    ? "bg-gray-500 text-white"
-                    : "bg-primary text-white"
-                }`}
-              >
+              <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-primary text-white">
                 {product.badge}
               </span>
             )}
           </div>
 
-          {/* Info */}
-          <div className="p-6 md:p-8 flex flex-col">
-            <p className="text-xs text-primary font-medium uppercase tracking-wider mb-1">
-              {product.category.replace("-", " & ")}
-            </p>
-            <h2 className="text-xl font-bold text-gray-900 mb-3">
-              {product.name}
-            </h2>
+          {/* Details */}
+          <div className="p-6 flex flex-col">
+            <p className="text-xs font-medium text-primary uppercase tracking-wider mb-1">{product.category}</p>
+            <h2 className="text-xl font-bold mb-2">{product.name}</h2>
 
             {/* Rating */}
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-2 mb-3">
               <div className="flex">
                 {[...Array(5)].map((_, i) => (
-                  <svg
-                    key={i}
-                    className={`w-4 h-4 ${
-                      i < Math.floor(product.rating) ? "text-yellow-400" : "text-gray-200"
-                    }`}
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
+                  <svg key={i} className={`w-4 h-4 ${i < Math.floor(product.rating) ? "text-warning" : "text-border"}`} fill="currentColor" viewBox="0 0 20 20">
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                   </svg>
                 ))}
               </div>
-              <span className="text-xs text-muted">({product.reviews} reviews)</span>
+              <span className="text-sm text-muted">{product.rating} ({product.reviews.toLocaleString()})</span>
             </div>
 
             {/* Price */}
-            <div className="flex items-center gap-3 mb-4">
-              <span className="text-2xl font-bold text-gray-900">
-                ${product.price.toFixed(2)}
-              </span>
+            <div className="flex items-baseline gap-3 mb-4">
+              <span className="text-2xl font-bold">${product.price.toLocaleString()}</span>
               {product.originalPrice && (
                 <>
-                  <span className="text-base text-muted line-through">
-                    ${product.originalPrice.toFixed(2)}
-                  </span>
-                  <span className="px-2 py-0.5 bg-red-50 text-red-600 text-xs font-semibold rounded-full">
-                    {discount}% OFF
-                  </span>
+                  <span className="text-sm text-muted line-through">${product.originalPrice.toLocaleString()}</span>
+                  <span className="text-sm font-semibold text-secondary">-{discount}%</span>
                 </>
               )}
             </div>
 
-            <p className="text-sm text-gray-600 leading-relaxed mb-4 line-clamp-3">
-              {product.description}
-            </p>
+            <p className="text-sm text-muted leading-relaxed mb-4 line-clamp-3">{product.description}</p>
 
             {/* Features */}
-            <div className="flex flex-wrap gap-2 mb-6">
-              {product.features.slice(0, 3).map((feature, i) => (
-                <span key={i} className="px-3 py-1 bg-gray-50 text-gray-600 text-xs rounded-full border border-gray-100">
-                  {feature}
+            <div className="flex flex-wrap gap-1.5 mb-5">
+              {product.features.slice(0, 3).map((f) => (
+                <span key={f} className="px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-medium">
+                  {f}
                 </span>
               ))}
             </div>
 
-            {/* Stock */}
-            <div className="flex items-center gap-2 mb-4">
-              <div className={`w-2 h-2 rounded-full ${product.inStock ? "bg-green-500" : "bg-red-500"}`} />
-              <span className={`text-xs font-medium ${product.inStock ? "text-green-600" : "text-red-600"}`}>
-                {product.inStock ? "In Stock" : "Out of Stock"}
-              </span>
-            </div>
-
             <div className="mt-auto space-y-3">
-              {/* Quantity & Add to Cart */}
-              {product.inStock && (
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden">
-                    <button
-                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="px-3 py-2 text-gray-600 hover:bg-gray-50 transition-colors text-sm"
-                    >
-                      -
-                    </button>
-                    <span className="px-4 py-2 font-medium text-gray-900 text-sm border-x border-gray-200">
-                      {quantity}
-                    </span>
-                    <button
-                      onClick={() => setQuantity(quantity + 1)}
-                      className="px-3 py-2 text-gray-600 hover:bg-gray-50 transition-colors text-sm"
-                    >
-                      +
-                    </button>
+              {/* Quantity & Add */}
+              {product.inStock ? (
+                <div className="flex gap-2">
+                  <div className="flex items-center border border-border rounded-xl overflow-hidden">
+                    <button onClick={() => setQty(Math.max(1, qty - 1))} className="px-3 py-2.5 hover:bg-surface transition-colors text-sm">−</button>
+                    <span className="px-3 py-2.5 text-sm font-medium min-w-[40px] text-center">{qty}</span>
+                    <button onClick={() => setQty(qty + 1)} className="px-3 py-2.5 hover:bg-surface transition-colors text-sm">+</button>
                   </div>
-                  <button
-                    onClick={handleAddToCart}
-                    className="flex-1 py-2.5 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary-dark transition-colors"
-                  >
+                  <button onClick={handleAdd} className="flex-1 py-2.5 rounded-xl bg-primary hover:bg-primary-dark text-white font-medium text-sm transition-colors">
                     Add to Cart
                   </button>
                 </div>
+              ) : (
+                <button disabled className="w-full py-2.5 rounded-xl bg-surface text-muted font-medium text-sm cursor-not-allowed">
+                  Out of Stock
+                </button>
               )}
 
-              <div className="flex gap-3">
+              <div className="flex gap-2">
                 <button
-                  onClick={handleToggleWishlist}
-                  className={`flex-1 py-2.5 rounded-xl font-medium text-sm border transition-colors flex items-center justify-center gap-2 ${
-                    inWishlist
-                      ? "bg-red-50 border-red-200 text-red-600"
-                      : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                  onClick={() => { toggleWishlist(product); addToast(isInWishlist(product.id) ? "Removed from wishlist" : "Added to wishlist", "info"); }}
+                  className={`flex-1 py-2.5 rounded-xl border text-sm font-medium transition-all ${
+                    isInWishlist(product.id) ? "border-secondary text-secondary bg-secondary/5" : "border-border text-muted hover:border-primary hover:text-primary"
                   }`}
                 >
-                  <svg
-                    className="w-4 h-4"
-                    fill={inWishlist ? "currentColor" : "none"}
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
-                  {inWishlist ? "In Wishlist" : "Add to Wishlist"}
+                  {isInWishlist(product.id) ? "♥ Wishlisted" : "♡ Wishlist"}
                 </button>
                 <Link
                   href={`/shop/${product.id}`}
                   onClick={onClose}
-                  className="flex-1 py-2.5 rounded-xl font-medium text-sm border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors text-center"
+                  className="flex-1 py-2.5 rounded-xl border border-border text-sm font-medium text-center text-muted hover:border-primary hover:text-primary transition-all"
                 >
-                  View Full Details
+                  View Details
                 </Link>
               </div>
             </div>

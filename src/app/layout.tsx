@@ -20,9 +20,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ShopVerse - Premium E-Commerce Store",
+  title: "NovaBuy — Premium Tech & Lifestyle Store",
   description:
-    "Discover amazing products at great prices. Shop electronics, fashion, home goods, and more at ShopVerse.",
+    "Discover cutting-edge tech, premium audio, and smart gadgets. Free shipping on orders over $99.",
 };
 
 export default function RootLayout({

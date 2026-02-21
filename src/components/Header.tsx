@@ -1,207 +1,141 @@
 "use client";
-
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 
 export default function Header() {
-  const { totalItems } = useCart();
-  const { totalItems: wishlistCount } = useWishlist();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
+  const { totalItems: cartCount } = useCart();
+  const { totalItems: wishCount } = useWishlist();
+
+  const links = [
+    { href: "/", label: "Home" },
+    { href: "/shop", label: "Shop" },
+    { href: "/about", label: "About" },
+    { href: "/contact", label: "Contact" },
+  ];
+
+  const isActive = (href: string) =>
+    href === "/" ? pathname === "/" : pathname.startsWith(href);
 
   return (
-    <header className="bg-white shadow-sm sticky top-0 z-50 border-b border-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-50 glass border-b border-border/50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">S</span>
+          <Link href="/" className="flex items-center gap-2 shrink-0">
+            <div className="w-8 h-8 rounded-lg gradient-bg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">N</span>
             </div>
-            <span className="text-xl font-bold text-gray-900">ShopVerse</span>
+            <span className="text-xl font-bold tracking-tight">
+              Nova<span className="text-primary">Buy</span>
+            </span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
-            <Link
-              href="/"
-              className="text-gray-600 hover:text-primary transition-colors text-sm font-medium"
-            >
-              Home
-            </Link>
-            <Link
-              href="/shop"
-              className="text-gray-600 hover:text-primary transition-colors text-sm font-medium"
-            >
-              Shop
-            </Link>
-            <Link
-              href="/about"
-              className="text-gray-600 hover:text-primary transition-colors text-sm font-medium"
-            >
-              About
-            </Link>
-            <Link
-              href="/contact"
-              className="text-gray-600 hover:text-primary transition-colors text-sm font-medium"
-            >
-              Contact
-            </Link>
+          {/* Desktop Nav */}
+          <nav className="hidden md:flex items-center gap-1">
+            {links.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  isActive(link.href)
+                    ? "text-primary bg-primary/10"
+                    : "text-muted hover:text-foreground hover:bg-surface"
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
           </nav>
 
-          {/* Right Actions */}
-          <div className="flex items-center gap-3">
-            {/* Wishlist */}
+          {/* Actions */}
+          <div className="flex items-center gap-1">
             <Link
               href="/account?tab=wishlist"
-              className="relative p-2 text-gray-600 hover:text-red-500 transition-colors"
-              title="Wishlist"
+              className="relative p-2.5 rounded-lg text-muted hover:text-foreground hover:bg-surface transition-all"
+              aria-label="Wishlist"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                />
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
               </svg>
-              {wishlistCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
-                  {wishlistCount}
+              {wishCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-4.5 h-4.5 bg-secondary text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                  {wishCount}
                 </span>
               )}
             </Link>
 
-            {/* Cart */}
             <Link
               href="/cart"
-              className="relative p-2 text-gray-600 hover:text-primary transition-colors"
-              title="Cart"
+              className="relative p-2.5 rounded-lg text-muted hover:text-foreground hover:bg-surface transition-all"
+              aria-label="Cart"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"
-                />
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
               </svg>
-              {totalItems > 0 && (
-                <span className="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
-                  {totalItems}
+              {cartCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-4.5 h-4.5 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                  {cartCount}
                 </span>
               )}
             </Link>
 
             <Link
-              href="/login"
-              className="hidden sm:inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-primary transition-colors"
+              href="/account"
+              className="hidden sm:flex p-2.5 rounded-lg text-muted hover:text-foreground hover:bg-surface transition-all"
+              aria-label="Account"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                />
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
-              Account
             </Link>
 
-            {/* Mobile menu button */}
+            {/* Mobile toggle */}
             <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 text-gray-600 hover:text-primary"
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="md:hidden p-2.5 rounded-lg text-muted hover:text-foreground hover:bg-surface transition-all"
+              aria-label="Menu"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                {mobileMenuOpen ? (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                ) : (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                )}
-              </svg>
+              {mobileOpen ? (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5" />
+                </svg>
+              )}
             </button>
           </div>
         </div>
       </div>
 
       {/* Mobile Menu */}
-      {mobileMenuOpen && (
-        <div className="md:hidden border-t border-gray-100 bg-white">
-          <div className="px-4 py-3 space-y-2">
+      {mobileOpen && (
+        <div className="md:hidden border-t border-border/50 animate-fade-in">
+          <div className="px-4 py-3 space-y-1">
+            {links.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileOpen(false)}
+                className={`block px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  isActive(link.href)
+                    ? "text-primary bg-primary/10"
+                    : "text-muted hover:text-foreground hover:bg-surface"
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
             <Link
-              href="/"
-              className="block px-3 py-2 text-gray-600 hover:text-primary hover:bg-gray-50 rounded-lg text-sm font-medium"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Home
-            </Link>
-            <Link
-              href="/shop"
-              className="block px-3 py-2 text-gray-600 hover:text-primary hover:bg-gray-50 rounded-lg text-sm font-medium"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Shop
-            </Link>
-            <Link
-              href="/about"
-              className="block px-3 py-2 text-gray-600 hover:text-primary hover:bg-gray-50 rounded-lg text-sm font-medium"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              About
-            </Link>
-            <Link
-              href="/contact"
-              className="block px-3 py-2 text-gray-600 hover:text-primary hover:bg-gray-50 rounded-lg text-sm font-medium"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Contact
-            </Link>
-            <Link
-              href="/account?tab=wishlist"
-              className="block px-3 py-2 text-gray-600 hover:text-primary hover:bg-gray-50 rounded-lg text-sm font-medium"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Wishlist {wishlistCount > 0 && `(${wishlistCount})`}
-            </Link>
-            <Link
-              href="/login"
-              className="block px-3 py-2 text-gray-600 hover:text-primary hover:bg-gray-50 rounded-lg text-sm font-medium"
-              onClick={() => setMobileMenuOpen(false)}
+              href="/account"
+              onClick={() => setMobileOpen(false)}
+              className="block px-4 py-2.5 rounded-lg text-sm font-medium text-muted hover:text-foreground hover:bg-surface transition-all"
             >
               Account
             </Link>
